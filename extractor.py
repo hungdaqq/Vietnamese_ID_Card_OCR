@@ -18,10 +18,10 @@ class Extractor:
 
     def __init__(self):
 
-        # self.config = Cfg.load_config_from_name("vgg_seq2seq")
-        # self.config["weights"] = "./weights/seq2seqocr.pth"
-        # self.config["cnn"]["pretrained"] = False
-        # self.config["device"] = "cpu"
+        self.config = Cfg.load_config_from_name("vgg_seq2seq")
+        self.config["weights"] = "./weights/seq2seqocr.pth"
+        self.config["cnn"]["pretrained"] = False
+        self.config["device"] = "cpu"
 
         if ocr == None:
             self.ocr = PaddleOCR(
@@ -31,10 +31,10 @@ class Extractor:
             )
         else:
             self.ocr = ocr
-        # if detector == None:
-        #     self.detector = Predictor(self.config)
-        # else:
-        #     self.detector = detector
+        if detector == None:
+            self.detector = Predictor(self.config)
+        else:
+            self.detector = detector
 
         # result = {'ID_number':'',
         #              'Name':'',
@@ -45,7 +45,7 @@ class Extractor:
         #              'Place_of_residence':''}
 
     def Detection(self, frame):
-        annotations = self.ocr.ocr(frame, rec=True, cls=False)
+        annotations = self.ocr.ocr(frame, rec=False, cls=False)
         return annotations[0]
 
     def WarpAndSave(
@@ -139,23 +139,26 @@ class Extractor:
 
         return [s, box]
 
-    def GetInformationAndSave(self, _results):
+    def GetInformationFront(self, _results):
 
         result = {}
-        result["id_number"] = ""
-        result["name"] = ""
+        result["identity_card_number"] = ""
+        result["full_name"] = ""
         result["date_of_birth"] = ""
-        result["sex"] = ""
+        result["gender"] = ""
         result["nationality"] = "Việt Nam"
         result["place_of_origin"] = ""
         result["place_of_residence"] = ""
+        result["id_card_expired_date"] = ""
 
         for i, res in enumerate(_results):
             s = res[0]
             print(s)
 
-            if re.search(utils.regex_id_number, s) and (not result["id_number"]):
-                result["id_number"] = s
+            if re.search(utils.regex_id_number, s) and (
+                not result["identity_card_number"]
+            ):
+                result["identity_card_number"] = s
                 continue
 
             if re.search(r"Ho|va|tên|ten|Full|name", s):
@@ -180,7 +183,7 @@ class Extractor:
                 else:
                     name = _results[i + 2]
 
-                result["name"] = name[0].title()
+                result["full_name"] = name[0].title()
                 # result["name_box"] = name[1] if name[1] else []
 
                 # if result["date_of_birth"] == "":
@@ -218,9 +221,28 @@ class Extractor:
 
                 continue
 
+            if re.search(r"giá|trị|expiry", s) and not result["id_card_expired_date"]:
+                # Check if date is embedded with other text
+                if re.search(utils.regex_dob, s):
+                    dob = re.sub(r"[^0-9/]", "", s)
+                    result["id_card_expired_date"] = dob.strip()
+                elif re.search(utils.regex_dob, _results[i - 1][0]):
+                    dob = re.sub(r"[^0-9/]", "", _results[i - 1][0])
+                    result["id_card_expired_date"] = dob.strip()
+
+                elif re.search(utils.regex_dob, _results[i + 1][0]):
+                    dob = re.sub(r"[^0-9/]", "", _results[i + 1][0])
+                    result["id_card_expired_date"] = dob.strip()
+                else:
+                    dob = []
+
+                continue
+
             if re.search(r"Giới|Gioi|Sex", s):
                 gender = _results[i]
-                result["sex"] = "Nữ" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "Nam"
+                result["gender"] = (
+                    "Nữ" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "Nam"
+                )
                 # result["sex_box"] = Gender[1] if Gender[1] else []
                 continue
 
@@ -366,5 +388,40 @@ class Extractor:
         # with open("extracted_infomation.json", "w", encoding="utf-8") as f:
         #     f.write(json.dumps(result, indent=4, ensure_ascii=False))
         #     f.close()
+
+        return result
+
+    def GetInformationBack(self, _results):
+
+        result = {}
+        result["id_card_issued_date"] = ""
+
+        for i, res in enumerate(_results):
+            s = res[0]
+            print(s)
+            if (
+                re.search(r"Date|month|year|Ngày|tháng|năm", s)
+                and not result["id_card_issued_date"]
+            ):
+                # Check if date is embedded with other text
+                if re.search(utils.regex_dob, s):
+                    dob = re.sub(r"[^0-9/]", "", s)
+                    result["id_card_issued_date"] = dob = (
+                        dob[1:].strip() if dob.startswith("/") else dob.strip()
+                    )
+                elif re.search(utils.regex_dob, _results[i - 1][0]):
+                    dob = re.sub(r"[^0-9/]", "", _results[i - 1][0])
+                    result["id_card_issued_date"] = dob = (
+                        dob[1:].strip() if dob.startswith("/") else dob.strip()
+                    )
+                elif re.search(utils.regex_dob, _results[i + 1][0]):
+                    dob = re.sub(r"[^0-9/]", "", _results[i + 1][0])
+                    result["id_card_issued_date"] = dob = (
+                        dob[1:].strip() if dob.startswith("/") else dob.strip()
+                    )
+                else:
+                    dob = []
+
+                continue
 
         return result
