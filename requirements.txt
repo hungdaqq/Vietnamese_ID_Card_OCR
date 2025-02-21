@@ -2,3 +2,7 @@ vietocr
 paddleocr
 fastapi
 uvicorn
+paddlepaddle
+torch
+torchvision
+python-multipart
