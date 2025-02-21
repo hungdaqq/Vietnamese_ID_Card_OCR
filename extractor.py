@@ -153,7 +153,6 @@ class Extractor:
 
         for i, res in enumerate(_results):
             s = res[0]
-            print(s)
 
             if re.search(utils.regex_id_number, s) and (
                 not result["identity_card_number"]
@@ -398,7 +397,6 @@ class Extractor:
 
         for i, res in enumerate(_results):
             s = res[0]
-            print(s)
             if (
                 re.search(r"Date|month|year|Ngày|tháng|năm", s)
                 and not result["id_card_issued_date"]
