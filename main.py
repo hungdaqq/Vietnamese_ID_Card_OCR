@@ -10,7 +10,7 @@ idcard_extractor = Extractor()
 router = APIRouter()
 
 
-@router.post("/ocr-idcard")
+@router.post("/ocr")
 async def upload_image(
     id_card_front: UploadFile = File(...),
     id_card_back: UploadFile = File(...),
