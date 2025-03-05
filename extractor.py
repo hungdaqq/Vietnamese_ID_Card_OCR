@@ -22,7 +22,7 @@ class Extractor:
         self.config["weights"] = "./weights/seq2seqocr.pth"
         self.config["cnn"]["pretrained"] = False
         self.config["device"] = "cpu"
-
+        print(self.config)
         if ocr == None:
             self.ocr = PaddleOCR(
                 lang="en",
@@ -35,14 +35,6 @@ class Extractor:
             self.detector = Predictor(self.config)
         else:
             self.detector = detector
-
-        # result = {'ID_number':'',
-        #              'Name':'',
-        #              'Date_of_birth':'',
-        #              'Gender':'',
-        #              'Nationality':'',
-        #              'Place_of_origin':'',
-        #              'Place_of_residence':''}
 
     def Detection(self, frame):
         annotations = self.ocr.ocr(frame, rec=False, cls=False)

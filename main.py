@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, APIRouter
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
 import time  # Import time module to measure execution time
@@ -45,14 +46,9 @@ async def upload_image(
         # Extract the information from the detected boxes for the front
         front_extract_start_time = time.time()
         extracted_result = []
-        for i, box in enumerate(reversed(front_annotations)):
-            loop_start_time = time.time()  # Start time for each loop iteration
+        for _, box in enumerate(reversed(front_annotations)):
             t = idcard_extractor.WarpAndRec(front_img, box[0], box[1], box[2], box[3])
             extracted_result.append(t)
-            loop_end_time = time.time()  # End time for each loop iteration
-            print(
-                f"Front Loop {i + 1} Time: {loop_end_time - loop_start_time:.4f} seconds"
-            )
         front_extract_end_time = time.time()
 
         # Parse the information from the extracted result for the front
@@ -63,14 +59,9 @@ async def upload_image(
         # Extract the information from the detected boxes for the back
         back_extract_start_time = time.time()
         extracted_result = []
-        for i, box in enumerate(reversed(back_annotations)):
-            loop_start_time = time.time()  # Start time for each loop iteration
+        for _, box in enumerate(reversed(back_annotations)):
             t = idcard_extractor.WarpAndRec(back_img, box[0], box[1], box[2], box[3])
             extracted_result.append(t)
-            loop_end_time = time.time()  # End time for each loop iteration
-            print(
-                f"Back Loop {i + 1} Time: {loop_end_time - loop_start_time:.4f} seconds"
-            )
         back_extract_end_time = time.time()
 
         # Parse the information from the extracted result for the back
@@ -109,7 +100,7 @@ async def upload_image(
             status_code=200,
             content={
                 "status_code": 200,
-                "message": "Successfully extracted the information",
+                "message": "Trích xuất thông tin CCCD thành công",
                 "data": {
                     "identity_card_number": front_info["identity_card_number"],
                     "full_name": front_info["full_name"],
@@ -131,7 +122,7 @@ async def upload_image(
             status_code=400,
             content={
                 "status_code": 400,
-                "message": "Failed to extract the information",
+                "message": "Không thể trích xuất thông tin CCCD",
                 "data": None,
                 "error": str(e),
             },
@@ -139,6 +130,13 @@ async def upload_image(
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(router, prefix="/api")
 
