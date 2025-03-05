@@ -232,7 +232,7 @@ class Extractor:
             if re.search(r"Giới|Gioi|Sex", s):
                 gender = _results[i]
                 result["gender"] = (
-                    "Nữ" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "Nam"
+                    "FEMALE" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "MALE"
                 )
                 # result["sex_box"] = Gender[1] if Gender[1] else []
                 continue
