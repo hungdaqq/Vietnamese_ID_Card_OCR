@@ -28,9 +28,9 @@ async def upload_image(
         back_img = cv2.imdecode(back_array, cv2.IMREAD_COLOR)
 
         front_annotations = idcard_extractor.Detection(front_img)
-
+        print(front_annotations)
         back_annotations = idcard_extractor.Detection(back_img)
-
+        print(back_annotations)
         extracted_result = []
         for _, box in enumerate(reversed(front_annotations)):
             t = idcard_extractor.WarpAndRec(front_img, box[0], box[1], box[2], box[3])
