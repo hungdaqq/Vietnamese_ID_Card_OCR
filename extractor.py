@@ -18,9 +18,9 @@ class Extractor:
 
     def __init__(self):
 
-        self.config = Cfg.load_config_from_name("vgg_seq2seq")
+        self.config = Cfg.load_config_from_file("./base.yml")
         self.config["weights"] = "./weights/seq2seqocr.pth"
-        self.config["cnn"]["pretrained"] = False
+        # self.config["cnn"]["pretrained"] = False
         self.config["device"] = "cpu"
         print(self.config)
         if ocr == None:
@@ -145,7 +145,7 @@ class Extractor:
 
         for i, res in enumerate(_results):
             s = res[0]
-
+            print(s)
             if re.search(utils.regex_id_number, s) and (
                 not result["identity_card_number"]
             ):
@@ -234,6 +234,7 @@ class Extractor:
                 result["gender"] = (
                     "FEMALE" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "MALE"
                 )
+                print(f"Found gender: {result['gender']}")
                 # result["sex_box"] = Gender[1] if Gender[1] else []
                 continue
 
@@ -267,7 +268,7 @@ class Extractor:
             #     continue
 
             if re.search(r"Quê|Que|origin|ongin|ngin|orging", s):
-                if not re.search(r"[0-9]{4}", _results[i + 1][0]):
+                if not re.search(utils.regex_residence, _results[i + 1][0]):
                     place_of_origin = [_results[i], _results[i + 1]]
                 else:
                     place_of_origin = []
@@ -275,103 +276,104 @@ class Extractor:
                 if place_of_origin:
                     if (
                         len(
-                            re.split(r".|:|;|of|ging|gin|ggong", place_of_origin[0][0])[
+                            re.split(":|;|of|ging|gin|ggong", place_of_origin[0][0])[
                                 -1
                             ].strip()
                         )
                         > 2
                     ):
                         result["place_of_origin"] = (
-                            (
-                                re.split(
-                                    r".|:|;|of|ging|gin|ggong", place_of_origin[0][0]
-                                )
-                            )[-1].strip()
+                            (re.split(":|;|of|ging|gin|ggong", place_of_origin[0][0]))[
+                                -1
+                            ].strip()
                             + ", "
                             + place_of_origin[1][0]
                         )
                     else:
                         result["place_of_origin"] = place_of_origin[1][0]
-                    # result["place_of_origin_box"] = place_of_origin[1][1]
+                        print(f"Found place_of_origin: {result['place_of_origin']}")
 
                 continue
 
-            if re.search(r"Nơi|trú|residence", s):
-                vals2 = (
-                    ""
-                    if (i + 2 > len(_results) - 1)
-                    else (
-                        _results[i + 2] if len(_results[i + 2][0]) > 5 else _results[-1]
-                    )
-                )
-                vals3 = (
-                    ""
-                    if (i + 3 > len(_results) - 1)
-                    else (
-                        _results[i + 3] if len(_results[i + 3][0]) > 5 else _results[-1]
-                    )
-                )
-
-                if (re.split(r":|;|residence|ence|end", s))[-1].strip() != "":
-
-                    if vals2 != "" and not re.search(utils.regex_residence, vals2[0]):
-                        place_of_residence = [_results[i], vals2]
-                    elif vals3 != "" and not re.search(utils.regex_residence, vals3[0]):
-                        place_of_residence = [_results[i], vals3]
-                    elif not re.search(utils.regex_residence, _results[-1][0]):
-                        place_of_residence = [_results[i], _results[-1]]
+            if re.search(r"Nơi|Noi|tru|thuong|trú|residence", s):
+                if not re.search(utils.regex_residence, _results[i + 1][0]):
+                    place_of_residence = [_results[i], _results[i + 1]]
+                elif not re.search(utils.regex_residence, _results[-1][0]):
+                    place_of_residence = [_results[i], _results[-1]]
+                elif not re.search(utils.regex_residence, _results[-2][0]):
+                    place_of_residence = [_results[i], _results[-2]]
+                if place_of_residence:
+                    first_line = re.split(
+                        ":|;|of|residence|ence|end", place_of_residence[0][0]
+                    )[-1].strip()
+                    if len(first_line) > 2:
+                        result["place_of_residence"] = (
+                            first_line + ", " + place_of_residence[1][0]
+                        )
                     else:
-                        place_of_residence = [_results[-1], []]
+                        result["place_of_residence"] = place_of_residence[1][0]
 
-                else:
-                    place_of_residence = (
-                        [vals2, []]
-                        if (vals2 and not re.search(utils.regex_residence, vals2[0]))
-                        else [_results[-1], []]
-                    )
-
-                if place_of_residence[1]:
-                    result["place_of_residence"] = (
-                        re.split(
-                            r":|;|residence|sidencs|ence|end", place_of_residence[0][0]
-                        )[-1].strip()
-                        + ", "
-                        + str(place_of_residence[1][0]).strip()
-                    )
-                    # result["place_of_origin_box"] = place_of_residence[1][1]
-
-                else:
-                    result["place_of_origin"] = place_of_residence[0][0]
-                    # result["place_of_origin_box"] = (
-                    #     place_of_residence[0][1] if place_of_residence else []
-                    # )
                 continue
+            # if re.search(r"Nơi|Noi|tru|thuong|trú|residence", s):
+            #     vals2 = (
+            #         ""
+            #         if (i + 2 > len(_results) - 1)
+            #         else (
+            #             _results[i + 2] if len(_results[i + 2][0]) > 5 else _results[-1]
+            #         )
+            #     )
+            #     vals3 = (
+            #         ""
+            #         if (i + 3 > len(_results) - 1)
+            #         else (
+            #             _results[i + 3] if len(_results[i + 3][0]) > 5 else _results[-1]
+            #         )
+            #     )
 
-            elif i == len(_results) - 1:
-                if result["place_of_residence"] == "":
-                    if not re.search(utils.regex_residence, _results[-1][0]):
-                        place_of_residence = _results[-1]
-                    elif not re.search(utils.regex_residence, _results[-2][0]):
-                        place_of_residence = _results[-2]
-                    else:
-                        place_of_residence = []
+            #     if (re.split(r":|;|residence|ence|end", s))[-1].strip() != "":
 
-                    result["place_of_residence"] = (
-                        place_of_residence[0] if place_of_residence else ""
-                    )
-                    # result["place_of_origin_box"] = (
-                    #     place_of_residence[1] if place_of_residence else []
-                    # )
-                # if result["sex"] == "":
-                #     result["sex_box"] = []
-                # if result["nationality"] == "":
-                #     result["nationality_box"] = []
-                # if result["name"] == "":
-                #     result["name_box"] = []
-                # if result["date_of_birth"] == "":
-                #     result["date_of_birth_box"] = []
-                # if result["place_of_origin"] == "":
-                #     result["place_of_origin_box"] = []
+            #         if vals2 != "" and not re.search(utils.regex_residence, vals2[0]):
+            #             place_of_residence = [_results[i], vals2]
+            #         elif vals3 != "" and not re.search(utils.regex_residence, vals3[0]):
+            #             place_of_residence = [_results[i], vals3]
+            #         elif not re.search(utils.regex_residence, _results[-1][0]):
+            #             place_of_residence = [_results[i], _results[-1]]
+            #         else:
+            #             place_of_residence = [_results[-1], []]
+
+            #     else:
+            #         place_of_residence = (
+            #             [vals2, []]
+            #             if (vals2 and not re.search(utils.regex_residence, vals2[0]))
+            #             else [_results[-1], []]
+            #         )
+
+            #     if place_of_residence[1]:
+            #         result["place_of_residence"] = (
+            #             re.split(
+            #                 r":|;|residence|sidencs|ence|end", place_of_residence[0][0]
+            #             )[-1].strip()
+            #             + ", "
+            #             + str(place_of_residence[1][0]).strip()
+            #         )
+
+            #     else:
+            #         result["place_of_residence"] = place_of_residence[0][0]
+
+            #     continue
+
+            # elif i == len(_results) - 1:
+            #     if result["place_of_residence"] == "":
+            #         if not re.search(utils.regex_residence, _results[-1][0]):
+            #             place_of_residence = _results[-1]
+            #         elif not re.search(utils.regex_residence, _results[-2][0]):
+            #             place_of_residence = _results[-2]
+            #         else:
+            #             place_of_residence = []
+
+            #         result["place_of_residence"] = (
+            #             place_of_residence[0] if place_of_residence else ""
+            #         )
 
             else:
                 continue
@@ -389,6 +391,7 @@ class Extractor:
 
         for i, res in enumerate(_results):
             s = res[0]
+            print(s)
             if (
                 re.search(r"Date|month|year|Ngày|tháng|năm", s)
                 and not result["id_card_issued_date"]
