@@ -1,3 +1,5 @@
 weights/*
 test/*
 __pycache__/*
+dataset/*
+*.zip

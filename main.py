@@ -3,12 +3,15 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
-import time  # Import time module to measure execution time
 from extractor import Extractor
+import ultralytics
+import utils
 
 idcard_extractor = Extractor()
 
 router = APIRouter()
+
+model = ultralytics.YOLO("best.pt")
 
 
 @router.post("/ocr")
@@ -27,22 +30,69 @@ async def upload_image(
         back_array = np.asarray(bytearray(back), dtype=np.uint8)
         back_img = cv2.imdecode(back_array, cv2.IMREAD_COLOR)
 
-        front_annotations = idcard_extractor.Detection(front_img)
+        results = model([front_img, back_img])
+        images = []
+        for img, result in zip([front_img, back_img], results):
+            points = {}
+            # Iterate over detected objects
+            for box in result.boxes:
+                # Get the class index and coordinates
+                class_index = int(box.cls.item())  # Convert tensor to int
+                x1, y1, x2, y2 = box.xyxy[0]  # Assuming xyxy format
+
+                # Calculate the center of the box
+                center_x = (x1 + x2) / 2
+                center_y = (y1 + y2) / 2
+
+                # Map the class index to a corner name
+                if class_index in utils.class_to_corner:
+                    corner_name = utils.class_to_corner[class_index]
+                    points[corner_name] = (center_x, center_y)
+
+            if all(
+                k in points
+                for k in ["top_left", "top_right", "bottom_right", "bottom_left"]
+            ):
+                rect = np.array(
+                    [
+                        points["top_left"],
+                        points["top_right"],
+                        points["bottom_right"],
+                        points["bottom_left"],
+                    ],
+                    dtype="float32",
+                )
+
+                width = int(np.linalg.norm(rect[0] - rect[1]))
+                height = int(np.linalg.norm(rect[0] - rect[3]))
+                dst = np.array(
+                    [[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]],
+                    dtype="float32",
+                )
+
+                M = cv2.getPerspectiveTransform(rect, dst)
+                img = cv2.warpPerspective(img, M, (width, height))
+
+            images.append(img)
+
+        cv2.imwrite("mattruoc.jpg", images[0])
+        cv2.imwrite("matsau.jpg", images[1])
+        # Front
+        front_annotations = idcard_extractor.Detection(images[0])
         print(front_annotations)
-        back_annotations = idcard_extractor.Detection(back_img)
+        back_annotations = idcard_extractor.Detection(images[1])
         print(back_annotations)
         extracted_result = []
         for _, box in enumerate(reversed(front_annotations)):
-            t = idcard_extractor.WarpAndRec(front_img, box[0], box[1], box[2], box[3])
+            t = idcard_extractor.WarpAndRec(images[0], box[0], box[1], box[2], box[3])
             extracted_result.append(t)
-
         front_info = idcard_extractor.GetInformationFront(extracted_result)
-
+        # Back
+        back_annotations = idcard_extractor.Detection(images[1])
         extracted_result = []
         for _, box in enumerate(reversed(back_annotations)):
-            t = idcard_extractor.WarpAndRec(back_img, box[0], box[1], box[2], box[3])
+            t = idcard_extractor.WarpAndRec(images[1], box[0], box[1], box[2], box[3])
             extracted_result.append(t)
-
         back_info = idcard_extractor.GetInformationBack(extracted_result)
 
         # Return the annotations as a response

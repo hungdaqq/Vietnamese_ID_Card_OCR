@@ -18,11 +18,10 @@ class Extractor:
 
     def __init__(self):
 
-        self.config = Cfg.load_config_from_file("./base.yml")
+        self.config = Cfg.load_config_from_name("vgg_seq2seq")
         self.config["weights"] = "./weights/seq2seqocr.pth"
-        # self.config["cnn"]["pretrained"] = False
+        self.config["cnn"]["pretrained"] = False
         self.config["device"] = "cpu"
-        print(self.config)
         if ocr == None:
             self.ocr = PaddleOCR(
                 lang="en",
@@ -37,7 +36,7 @@ class Extractor:
             self.detector = detector
 
     def Detection(self, frame):
-        annotations = self.ocr.ocr(frame, rec=False, cls=False)
+        annotations = self.ocr.ocr(frame, rec=True, cls=False)
         return annotations[0]
 
     def WarpAndSave(
@@ -120,7 +119,6 @@ class Extractor:
         matWarped = cv2.warpPerspective(
             frame, M, (maxWidth, maxHeight), flags=cv2.INTER_LINEAR
         )
-        # cv2.imwrite(fileName, matWarped)
 
         s = self.detector.predict(Image.fromarray(matWarped))
 
