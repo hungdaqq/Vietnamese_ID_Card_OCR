@@ -3,13 +3,17 @@ import cv2
 import numpy as np
 
 # Load a model
-model = ultralytics.YOLO("best.pt")
+model = ultralytics.YOLO("./weights/best.pt")
 
 # Define a mapping from class indices to corner names
-class_to_corner = {0: "bottom_left", 1: "bottom_right", 3: "top_left", 4: "top_right"}
+class_to_corner = {0: "bottom_left", 1: "bottom_right", 4: "top_left", 5: "top_right"}
 
 # Run batched inference on a list of images
-results = model(["/home/hungdq30/Downloads/8851b774-7297-43ba-8cf8-9707d406541d.jpeg"])
+results = model(
+    [
+        "/home/hungdq30/Downloads/CCCD-20250314T014247Z-001/CCCD/9601b6b7-fcbc-4ece-b395-07504a7d6507.jpeg"
+    ]
+)
 
 # Process results list
 for result in results:
@@ -45,7 +49,6 @@ for result in results:
             ],
             dtype="float32",
         )
-
         # Define the destination points for the perspective transform
         width = int(np.linalg.norm(rect[0] - rect[1]))
         height = int(np.linalg.norm(rect[0] - rect[3]))
@@ -56,7 +59,7 @@ for result in results:
 
         # Compute the perspective transform matrix and apply it
         image = cv2.imread(
-            "/home/hungdq30/Downloads/8851b774-7297-43ba-8cf8-9707d406541d.jpeg"
+            "/home/hungdq30/Downloads/CCCD-20250314T014247Z-001/CCCD/9601b6b7-fcbc-4ece-b395-07504a7d6507.jpeg"
         )
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(image, M, (width, height))

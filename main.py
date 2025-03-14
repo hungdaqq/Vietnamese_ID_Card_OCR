@@ -6,6 +6,7 @@ import numpy as np
 from extractor import Extractor
 import ultralytics
 import utils
+import requests
 
 idcard_extractor = Extractor()
 
@@ -75,13 +76,9 @@ async def upload_image(
 
             images.append(img)
 
-        cv2.imwrite("mattruoc.jpg", images[0])
-        cv2.imwrite("matsau.jpg", images[1])
         # Front
         front_annotations = idcard_extractor.Detection(images[0])
-        print(front_annotations)
         back_annotations = idcard_extractor.Detection(images[1])
-        print(back_annotations)
         extracted_result = []
         for _, box in enumerate(reversed(front_annotations)):
             t = idcard_extractor.WarpAndRec(images[0], box[0], box[1], box[2], box[3])
@@ -95,7 +92,12 @@ async def upload_image(
             extracted_result.append(t)
         back_info = idcard_extractor.GetInformationBack(extracted_result)
 
-        # Return the annotations as a response
+        front_dir = f"./tmp/{front_info['identity_card_number']}_mattruoc.jpg"
+        back_dir = f"./tmp/{front_info['identity_card_number']}_matsau.jpg"
+        cv2.imwrite(front_dir, images[0])
+        cv2.imwrite(back_dir, images[1])
+
+        
         return JSONResponse(
             status_code=200,
             content={
@@ -111,6 +113,8 @@ async def upload_image(
                     "place_of_residence": front_info["place_of_residence"],
                     "id_card_issued_date": back_info["id_card_issued_date"],
                     "id_card_expired_date": front_info["id_card_expired_date"],
+                    "id_card_front": id_card_front,
+                    "id_card_back": id_card_back,
                 },
                 "error": None,
             },

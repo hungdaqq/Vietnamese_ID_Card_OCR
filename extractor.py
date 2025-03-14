@@ -36,7 +36,7 @@ class Extractor:
             self.detector = detector
 
     def Detection(self, frame):
-        annotations = self.ocr.ocr(frame, rec=True, cls=False)
+        annotations = self.ocr.ocr(frame, rec=False, cls=False)
         return annotations[0]
 
     def WarpAndSave(
@@ -140,10 +140,10 @@ class Extractor:
         result["place_of_origin"] = ""
         result["place_of_residence"] = ""
         result["id_card_expired_date"] = ""
+        print(_results)
 
         for i, res in enumerate(_results):
             s = res[0]
-            print(s)
             if re.search(utils.regex_id_number, s) and (
                 not result["identity_card_number"]
             ):
@@ -167,7 +167,10 @@ class Extractor:
                 # result["id_number"] = (re.split(r":|[.]|\s+", ID_number[0]))[-1].strip()
                 # result["id_number_box"] = ID_number[1]
 
-                if not re.search(r"[0-9]", _results[i + 1][0]):
+                if (
+                    not re.search(r"[0-9]", _results[i + 1][0])
+                    and _results[i + 1][0].isupper()
+                ):
                     name = _results[i + 1]
                 else:
                     name = _results[i + 2]
@@ -232,7 +235,6 @@ class Extractor:
                 result["gender"] = (
                     "FEMALE" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "MALE"
                 )
-                print(f"Found gender: {result['gender']}")
                 # result["sex_box"] = Gender[1] if Gender[1] else []
                 continue
 
@@ -289,7 +291,6 @@ class Extractor:
                         )
                     else:
                         result["place_of_origin"] = place_of_origin[1][0]
-                        print(f"Found place_of_origin: {result['place_of_origin']}")
 
                 continue
 
@@ -376,20 +377,15 @@ class Extractor:
             else:
                 continue
 
-        # with open("extracted_infomation.json", "w", encoding="utf-8") as f:
-        #     f.write(json.dumps(result, indent=4, ensure_ascii=False))
-        #     f.close()
-
         return result
 
     def GetInformationBack(self, _results):
 
         result = {}
         result["id_card_issued_date"] = ""
-
+        print(_results)
         for i, res in enumerate(_results):
             s = res[0]
-            print(s)
             if (
                 re.search(r"Date|month|year|Ngày|tháng|năm", s)
                 and not result["id_card_issued_date"]
