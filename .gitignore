@@ -1,4 +1,4 @@
-weights/*
+weights/*.pth
 test/*
 __pycache__/*
 dataset/*
