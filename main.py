@@ -96,8 +96,24 @@ async def upload_image(
         back_dir = f"./tmp/{front_info['identity_card_number']}_matsau.jpg"
         cv2.imwrite(front_dir, images[0])
         cv2.imwrite(back_dir, images[1])
+        # Open the files in binary mode
+        with open(front_dir, "rb") as f1, open(back_dir, "rb") as f2:
+            # Create a list of tuples for the files
+            files = [
+                ("files", (front_dir, f1, "image/jpeg")),
+                ("files", (back_dir, f2, "image/jpeg")),
+            ]
 
-        
+            # Send the POST request
+            response = requests.post(utils.url, files=files)
+        if response.status_code == 201:
+            id_card_front = response.json()["data"][0]
+            id_card_back = response.json()["data"][1]
+        else:
+            id_card_front = None
+            id_card_back = None
+
+        # Return the extracted information
         return JSONResponse(
             status_code=200,
             content={
