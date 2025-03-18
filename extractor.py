@@ -17,10 +17,10 @@ detector = None
 class Extractor:
 
     def __init__(self):
-
-        self.config = Cfg.load_config_from_name("vgg_transformer")
-        # self.config["weights"] = "./weights/seq2seqocr.pth"
-        self.config["weights"] = "./weights/transformerocr.pth"
+        self.config = Cfg.load_config_from_name("vgg_seq2seq")
+        self.config["weights"] = "./weights/seq2seqocr.pth"
+        # self.config = Cfg.load_config_from_name("vgg_transformer")
+        # self.config["weights"] = "./weights/transformerocr.pth"
         self.config["cnn"]["pretrained"] = False
         self.config["device"] = "cpu"
         if ocr == None:
