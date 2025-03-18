@@ -7,6 +7,8 @@ from extractor import Extractor
 import ultralytics
 import utils
 import requests
+import os
+
 
 idcard_extractor = Extractor()
 
@@ -92,6 +94,9 @@ async def upload_image(
             extracted_result.append(t)
         back_info = idcard_extractor.GetInformationBack(extracted_result)
 
+        if not os.path.exists("./tmp"):
+            os.makedirs("./tmp")
+
         front_dir = f"./tmp/{front_info['identity_card_number']}_mattruoc.jpg"
         back_dir = f"./tmp/{front_info['identity_card_number']}_matsau.jpg"
         cv2.imwrite(front_dir, images[0])
@@ -144,7 +149,19 @@ async def upload_image(
             content={
                 "status_code": 400,
                 "message": "Không thể trích xuất thông tin CCCD",
-                "data": None,
+                "data": {
+                    "identity_card_number": None,
+                    "full_name": None,
+                    "date_of_birth": None,
+                    "gender": None,
+                    "nationality": None,
+                    "place_of_origin": None,
+                    "place_of_residence": None,
+                    "id_card_issued_date": None,
+                    "id_card_expired_date": None,
+                    "id_card_front": None,
+                    "id_card_back": None,
+                },
                 "error": str(e),
             },
         )
