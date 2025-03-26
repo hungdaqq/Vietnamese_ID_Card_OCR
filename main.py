@@ -108,9 +108,9 @@ async def upload_image(
                 ("files", (front_dir, f1, "image/jpeg")),
                 ("files", (back_dir, f2, "image/jpeg")),
             ]
-
             # Send the POST request
             response = requests.post(utils.url, files=files)
+            
         if response.status_code == 201:
             id_card_front = response.json()["data"][0]
             id_card_back = response.json()["data"][1]
