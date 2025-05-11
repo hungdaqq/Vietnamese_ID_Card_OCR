@@ -16,6 +16,9 @@ router = APIRouter()
 
 model = ultralytics.YOLO("best.pt")
 
+def resizeImage(img):
+    resized = cv2.resize(img, (1500, 1000), interpolation=cv2.INTER_AREA)
+    return resized
 
 @router.post("/ocr")
 async def upload_image(
@@ -99,8 +102,8 @@ async def upload_image(
 
         front_dir = f"./tmp/{front_info['identity_card_number']}_mattruoc.jpg"
         back_dir = f"./tmp/{front_info['identity_card_number']}_matsau.jpg"
-        cv2.imwrite(front_dir, images[0])
-        cv2.imwrite(back_dir, images[1])
+        cv2.imwrite(front_dir, resizeImage(images[0]), [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(back_dir, resizeImage(images[1]), [cv2.IMWRITE_JPEG_QUALITY, 90])
         # Open the files in binary mode
         with open(front_dir, "rb") as f1, open(back_dir, "rb") as f2:
             # Create a list of tuples for the files
@@ -193,3 +196,4 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=8088, reload=True)
+
