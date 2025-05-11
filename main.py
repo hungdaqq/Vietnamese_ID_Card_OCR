@@ -110,14 +110,37 @@ async def upload_image(
             ]
             # Send the POST request
             response = requests.post(utils.url, files=files)
-            
+
         if response.status_code == 201:
             id_card_front = response.json()["data"][0]
             id_card_back = response.json()["data"][1]
         else:
             id_card_front = None
             id_card_back = None
-
+        data = {
+            "identity_card_number": front_info["identity_card_number"],
+            "full_name": front_info["full_name"],
+            "date_of_birth": front_info["date_of_birth"],
+            "gender": front_info["gender"],
+            "nationality": front_info["nationality"],
+            "place_of_origin": front_info["place_of_origin"],
+            "place_of_residence": front_info["place_of_residence"],
+            "id_card_issued_date": back_info["id_card_issued_date"],
+            "id_card_expired_date": front_info["id_card_expired_date"],
+            "id_card_front": id_card_front,
+            "id_card_back": id_card_back,
+        }
+        empty = [field for field, value in data.items() if value == ""]
+        if len(empty) > 3:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status_code": 400,
+                    "message": "Không thể trích xuất đủ thông tin CCCD",
+                    "data": None,
+                    "error": f"Thiếu quá nhiều thông tin: {', '.join(empty)}",
+                },
+            )
         # Return the extracted information
         return JSONResponse(
             status_code=200,
@@ -149,19 +172,7 @@ async def upload_image(
             content={
                 "status_code": 400,
                 "message": "Không thể trích xuất thông tin CCCD",
-                "data": {
-                    "identity_card_number": None,
-                    "full_name": None,
-                    "date_of_birth": None,
-                    "gender": None,
-                    "nationality": None,
-                    "place_of_origin": None,
-                    "place_of_residence": None,
-                    "id_card_issued_date": None,
-                    "id_card_expired_date": None,
-                    "id_card_front": None,
-                    "id_card_back": None,
-                },
+                "data": None,
                 "error": str(e),
             },
         )

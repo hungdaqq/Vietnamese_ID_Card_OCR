@@ -17,10 +17,10 @@ detector = None
 class Extractor:
 
     def __init__(self):
-        self.config = Cfg.load_config_from_name("vgg_seq2seq")
-        self.config["weights"] = "./weights/seq2seqocr.pth"
-        # self.config = Cfg.load_config_from_name("vgg_transformer")
-        # self.config["weights"] = "./weights/transformerocr.pth"
+        # self.config = Cfg.load_config_from_name("vgg_seq2seq")
+        # self.config["weights"] = "./weights/seq2seqocr.pth"
+        self.config = Cfg.load_config_from_name("vgg_transformer")
+        self.config["weights"] = "./weights/transformerocr.pth"
         self.config["cnn"]["pretrained"] = False
         self.config["device"] = "cpu"
         if ocr == None:
@@ -141,7 +141,6 @@ class Extractor:
         result["place_of_origin"] = ""
         result["place_of_residence"] = ""
         result["id_card_expired_date"] = ""
-        print(_results)
 
         for i, res in enumerate(_results):
             s = res[0]
@@ -152,21 +151,6 @@ class Extractor:
                 continue
 
             if re.search(r"Ho|va|tên|ten|Full|name", s):
-                # result['ID_number']                   = result[i+1].split(':|;|,|\\.|\s+')[-1].strip()
-                # ID_number = (
-                #     result[i + 1]
-                #     if re.search(
-                #         r"[0-9][0-9][0-9]",
-                #         (re.split(r":|[.]|\s+", result[i + 1][0]))[-1].strip(),
-                #     )
-                #     else (
-                #         result[i + 2]
-                #         if re.search(r"[0-9][0-9][0-9]", result[i + 2][0])
-                #         else result[i + 3]
-                #     )
-                # )
-                # result["id_number"] = (re.split(r":|[.]|\s+", ID_number[0]))[-1].strip()
-                # result["id_number_box"] = ID_number[1]
 
                 if (
                     not re.search(r"[0-9]", _results[i + 1][0])
@@ -177,18 +161,6 @@ class Extractor:
                     name = _results[i + 2]
 
                 result["full_name"] = name[0].title()
-                # result["name_box"] = name[1] if name[1] else []
-
-                # if result["date_of_birth"] == "":
-                #     DOB = (
-                #         _results[i - 2]
-                #         if re.search(utils.regex_dob, _results[i - 2][0])
-                #         else []
-                #     )
-                #     result["date_of_birth"] = (
-                #         (re.split(r":|\s+", DOB[0]))[-1].strip() if DOB else ""
-                #     )
-                #     result["date_of_birth_box"] = DOB[1] if DOB else []
 
                 continue
 
@@ -236,37 +208,7 @@ class Extractor:
                 result["gender"] = (
                     "FEMALE" if re.search(r"Nữ|nữ|Nu|nu", gender[0]) else "MALE"
                 )
-                # result["sex_box"] = Gender[1] if Gender[1] else []
                 continue
-
-            # if re.search(r"Quốc|tịch|Nat", s):
-            #     if not re.search(
-            #         r"ty|ing", re.split(r":|,|[.]|ty|tịch", s)[-1].strip()
-            #     ) and (len(re.split(r":|,|[.]|ty|tịch", s)[-1].strip()) >= 3):
-            #         Nationality = _results[i]
-
-            #     elif not re.search(r"[0-9][0-9]/[0-9][0-9]/", _results[i + 1][0]):
-            #         Nationality = _results[i + 1]
-
-            #     else:
-            #         Nationality = _results[i - 1]
-
-            #     result["nationality"] = (
-            #         re.split(r":|-|,|[.]|ty|[0-9]|tịch", Nationality[0])[-1]
-            #         .strip()
-            #         .title()
-            #     )
-            #     result["nationality_box"] = Nationality[1] if Nationality[1] else []
-
-            #     for s in re.split(r"\s+", result["nationality"]):
-            #         if len(s) < 3:
-            #             result["nationality"] = (
-            #                 re.split(s, result["nationality"])[-1].strip().title()
-            #             )
-            #     if re.search(r"Nam", result["nationality"]):
-            #         result["nationality"] = "Việt Nam"
-
-            #     continue
 
             if re.search(r"Quê|Que|origin|ongin|ngin|orging", s):
                 if not re.search(utils.regex_residence, _results[i + 1][0]):
@@ -314,66 +256,6 @@ class Extractor:
                         result["place_of_residence"] = place_of_residence[1][0]
 
                 continue
-            # if re.search(r"Nơi|Noi|tru|thuong|trú|residence", s):
-            #     vals2 = (
-            #         ""
-            #         if (i + 2 > len(_results) - 1)
-            #         else (
-            #             _results[i + 2] if len(_results[i + 2][0]) > 5 else _results[-1]
-            #         )
-            #     )
-            #     vals3 = (
-            #         ""
-            #         if (i + 3 > len(_results) - 1)
-            #         else (
-            #             _results[i + 3] if len(_results[i + 3][0]) > 5 else _results[-1]
-            #         )
-            #     )
-
-            #     if (re.split(r":|;|residence|ence|end", s))[-1].strip() != "":
-
-            #         if vals2 != "" and not re.search(utils.regex_residence, vals2[0]):
-            #             place_of_residence = [_results[i], vals2]
-            #         elif vals3 != "" and not re.search(utils.regex_residence, vals3[0]):
-            #             place_of_residence = [_results[i], vals3]
-            #         elif not re.search(utils.regex_residence, _results[-1][0]):
-            #             place_of_residence = [_results[i], _results[-1]]
-            #         else:
-            #             place_of_residence = [_results[-1], []]
-
-            #     else:
-            #         place_of_residence = (
-            #             [vals2, []]
-            #             if (vals2 and not re.search(utils.regex_residence, vals2[0]))
-            #             else [_results[-1], []]
-            #         )
-
-            #     if place_of_residence[1]:
-            #         result["place_of_residence"] = (
-            #             re.split(
-            #                 r":|;|residence|sidencs|ence|end", place_of_residence[0][0]
-            #             )[-1].strip()
-            #             + ", "
-            #             + str(place_of_residence[1][0]).strip()
-            #         )
-
-            #     else:
-            #         result["place_of_residence"] = place_of_residence[0][0]
-
-            #     continue
-
-            # elif i == len(_results) - 1:
-            #     if result["place_of_residence"] == "":
-            #         if not re.search(utils.regex_residence, _results[-1][0]):
-            #             place_of_residence = _results[-1]
-            #         elif not re.search(utils.regex_residence, _results[-2][0]):
-            #             place_of_residence = _results[-2]
-            #         else:
-            #             place_of_residence = []
-
-            #         result["place_of_residence"] = (
-            #             place_of_residence[0] if place_of_residence else ""
-            #         )
 
             else:
                 continue
