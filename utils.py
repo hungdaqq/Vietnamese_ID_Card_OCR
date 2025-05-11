@@ -5,5 +5,5 @@ regex_residence = r"[0-9][0-9]/[0-9][0-9]/|[0-9]{4,10}|Date|Demo|Dis|Dec|Dale|fe
 # Define a mapping from class indices to corner names
 class_to_corner = {0: "bottom_left", 1: "bottom_right", 4: "top_left", 5: "top_right"}
 
-url = "https://maintechapi.ahava.com.vn/api/upload-private"
+url = "https://maintechapi.ahava.com.vn/api/upload"
 

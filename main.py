@@ -102,8 +102,8 @@ async def upload_image(
 
         front_dir = f"./tmp/{front_info['identity_card_number']}_mattruoc.jpg"
         back_dir = f"./tmp/{front_info['identity_card_number']}_matsau.jpg"
-        cv2.imwrite(front_dir, resizeImage(images[0]), [cv2.IMWRITE_JPEG_QUALITY, 90])
-        cv2.imwrite(back_dir, resizeImage(images[1]), [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(front_dir, resizeImage(images[0]), [cv2.IMWRITE_JPEG_QUALITY, 95])
+        cv2.imwrite(back_dir, resizeImage(images[1]), [cv2.IMWRITE_JPEG_QUALITY, 95])
         # Open the files in binary mode
         with open(front_dir, "rb") as f1, open(back_dir, "rb") as f2:
             # Create a list of tuples for the files
@@ -113,7 +113,6 @@ async def upload_image(
             ]
             # Send the POST request
             response = requests.post(utils.url, files=files)
-            print(response.json())
         if response.status_code == 201:
             id_card_front = response.json()["data"][0]
             id_card_back = response.json()["data"][1]
